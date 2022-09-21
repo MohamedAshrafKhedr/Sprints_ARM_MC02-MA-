@@ -28,7 +28,8 @@
 #define STCURRENT_REG 															*((uint32*)(Base_Address + STCURRENT_OFFSET))
 #define Count_Value 															(0x00000fffUL)
 #define INTCTRL_OFFSET															(0xD04UL)
-#define INCTCTRL_REG 															*((uint32*)(Base_Address + INTCTRL_OFFSET))
+#define INCTRL_REG 																*((uint32*)(Base_Address + INTCTRL_OFFSET))
+#define INCTRL_TICK_INIT 														(0x0040000UL)
 /**********************************************************************************************************************
  *  GLOBAL FUNCTION MACROS
  *********************************************************************************************************************/
