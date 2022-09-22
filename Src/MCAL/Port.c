@@ -63,7 +63,7 @@ void Port_Init(const Port_ConfigType* ConfigPtr)
 			Bit_Banding(PORTF_BASE, 0, GPIO_DEN_OFFSET) = 0;
 			Bit_Banding(PORTF_BASE, 0, GPIO_PDR_OFFSET) = 0;
 			Bit_Banding(PORTF_BASE, 0, GPIO_PUR_OFFSET) = 0;
-			Bit_Banding(PORTF_BASE, 0, GPIO_PCTL_OFFSET) = 0x0;
+			Bit_Banding(PORTF_BASE, 0, GPIO_PCTL_OFFSET) = 0x00;
 			Bit_Banding(PORTF_BASE, 0, GPIO_CR_OFFSET) = 0;
 		}
 		
