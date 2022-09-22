@@ -21,7 +21,7 @@
  *********************************************************************************************************************/
 #define Port_PinType 																						uint8
 #define Port_PinOutputCurrentType 																			uint8
-#define PORTF_BASE 																							(0x400253F0UL)
+#define PORTF_BASE 																							(0x400253FCUL)
 #define GPIO_DATA_OFFSET																					(0x000UL)
 #define GPIO_DIR_OFFSET																						(0x400UL)
 #define GPIO_AFSEL_OFFSET																					(0x420UL)
