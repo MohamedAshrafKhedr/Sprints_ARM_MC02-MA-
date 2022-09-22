@@ -8,10 +8,10 @@
 
  *  FILE DESCRIPTION
  *  -------------------------------------------------------------------------------------------------------------------
- *         File:  .h
- *       Module:  GPIO_DIO
+ *         File:  Std_Types.h
+ *       Module:  Std_Types
  *
- *  Description:  <DIO Deriver>     
+ *  Description:  <Std_Types Deriver>     
  *  
  *********************************************************************************************************************/
 #ifndef STDTYPES_H_
