@@ -27,6 +27,7 @@
 #define STCURRENT_OFFSET														(0x018UL)
 #define STCURRENT_REG 															*((uint32*)(Base_Address + STCURRENT_OFFSET))
 #define Count_Value 															(0x00000fffUL)
+#define Freq 																	(1843200UL)
 #define INTCTRL_OFFSET															(0xD04UL)
 #define INCTRL_REG 																*((uint32*)(Base_Address + INTCTRL_OFFSET))
 #define INCTRL_TICK_INIT 														(0x0040000UL)

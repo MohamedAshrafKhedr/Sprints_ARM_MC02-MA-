@@ -12,7 +12,8 @@
 /**********************************************************************************************************************
  *  INCLUDES
  *********************************************************************************************************************/
-#include "../Common/Stdtypes.h"
+ #include "../Common/Stdtypes.h"
+#include "Inc/Intctrl.h"
 
 /**********************************************************************************************************************
 *  LOCAL MACROS CONSTANT\FUNCTION
@@ -50,8 +51,13 @@
 * \Return value:   : Std_ReturnType  E_OK
 *                                    E_NOT_OK                                  
 *******************************************************************************/
-Std_ReturnType FunctionName(AnyType parameterName)
+void IntCtrl_init(void)
 {
+	Dis_Int(Core_Periph_Base, DIS0_OFFSET) = Int_Clear;
+	Dis_Int(Core_Periph_Base, DIS1_OFFSET) = Int_Clear;
+	Dis_Int(Core_Periph_Base, DIS2_OFFSET) = Int_Clear;
+	Dis_Int(Core_Periph_Base, DIS3_OFFSET) = Int_Clear;
+	Dis_Int(Core_Periph_Base, DIS4_OFFSET) = 0x000003FF;
 	
 	
 }
