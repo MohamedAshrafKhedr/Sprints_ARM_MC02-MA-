@@ -56,6 +56,10 @@ void SysTick_Init(uint32 Count)
 	STRELOAD_REG = Count;
 	INCTRL_REG = INCTRL_TICK_INIT;
 }
+void SysTick_Dis(void)
+{
+	INCTRL_REG = INCTRL_TICK_DIS;
+}
 
 /**********************************************************************************************************************
  *  END OF FILE: SysTick.c

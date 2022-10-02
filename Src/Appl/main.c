@@ -28,6 +28,7 @@
  *  GLOBAL DATA
  *********************************************************************************************************************/
 static volatile int x = 0;
+static volatile int Cnt = 0;
 static volatile int F = 0;
 /**********************************************************************************************************************
  *  LOCAL FUNCTION PROTOTYPES
@@ -58,36 +59,37 @@ int main(void)
 {
 	IntCtrl_init();
 	Port_Init(Ports);
-	LED_ON(5);
+	SysTick_Init(Count_Value);
+	
 	while(1){
 	
 	}
 	
 	return 0;
 }
+void Sys_Tick_Notification(void){
+	
+
+	Cnt++;
+	LED_ON(5);
+	LED_OFF(2);
+	
+}
 void LED_ON(uint8 time){
-	if(0 == F){
-		SysTick_Init(time * Freq);
+	if((time == Cnt)&&(0 == F)){
+		x = Dio_FlipChannel(F0);
+		Cnt = 0;
+		//SysTick_Init(Count_Value);
 		F = 1;
-	}else{
-		SysTick_Init(time * Freq);
 	}
 }
 void LED_OFF(uint8 time){
-	SysTick_Init(time * Freq);
-}
-void Sys_Tick_Notification(void){
-	
-	x = Dio_FlipChannel(F0);
-	
-	if(0 == (F%2)){
-		LED_ON(2);
-		F++;
-	}else{
-		LED_OFF(2);
-		F++;
+	if((time == Cnt)&&(1 == F)){
+		x = Dio_FlipChannel(F0);
+		Cnt = 0;
+		//SysTick_Init(Count_Value);
+		F = 0;
 	}
-	
 }
 /**********************************************************************************************************************
  *  END OF FILE: main.c

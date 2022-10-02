@@ -22,15 +22,16 @@
 #define Base_Address															(0xE000E000UL)
 #define STRCL_OFFSET															(0x010UL)
 #define STRCL_REG 																*((uint32*)(Base_Address + STRCL_OFFSET))
-#define STRELOAD_OFFSET															(0x014UL)
+#define STRELOAD_OFFSET														(0x014UL)
 #define STRELOAD_REG 															*((uint32*)(Base_Address + STRELOAD_OFFSET))
-#define STCURRENT_OFFSET														(0x018UL)
-#define STCURRENT_REG 															*((uint32*)(Base_Address + STCURRENT_OFFSET))
-#define Count_Value 															(0x00000fffUL)
-#define Freq 																	(1843200UL)
-#define INTCTRL_OFFSET															(0xD04UL)
+#define STCURRENT_OFFSET													(0x018UL)
+#define STCURRENT_REG 														*((uint32*)(Base_Address + STCURRENT_OFFSET))
+#define Count_Value 															(0xfffUL)
+#define Freq 																			(0x1UL)
+#define INTCTRL_OFFSET														(0xD04UL)
 #define INCTRL_REG 																*((uint32*)(Base_Address + INTCTRL_OFFSET))
-#define INCTRL_TICK_INIT 														(0x0040000UL)
+#define INCTRL_TICK_INIT 													(0x0040000UL)
+#define INCTRL_TICK_DIS 													(0x0020000UL)
 /**********************************************************************************************************************
  *  GLOBAL FUNCTION MACROS
  *********************************************************************************************************************/
@@ -51,6 +52,7 @@
  *********************************************************************************************************************/
 
 void SysTick_Init(uint32 Count);
+void SysTick_Dis(void);
  
 #endif  /* SYS_TICK_H */
 

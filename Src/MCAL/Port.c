@@ -59,17 +59,17 @@ void Port_Init(const Port_ConfigType* ConfigPtr)
 	for(i = 0; i < NO_OF_PORTS; i++){
 	
 		if(('F' == PORT)&&(ConfigPtr[i].PortPinMode == 0)){
-			Bit_Banding(PORTF_BASE, 0, GPIO_AFSEL_OFFSET) = 0;
-			Bit_Banding(PORTF_BASE, 0, GPIO_DEN_OFFSET) = 0;
-			Bit_Banding(PORTF_BASE, 0, GPIO_PDR_OFFSET) = 0;
-			Bit_Banding(PORTF_BASE, 0, GPIO_PUR_OFFSET) = 0;
-			Bit_Banding(PORTF_BASE, 0, GPIO_PCTL_OFFSET) = 0x00;
-			Bit_Banding(PORTF_BASE, 0, GPIO_CR_OFFSET) = 0;
+			Bit_Banding(PORTF_BASE, i, GPIO_AFSEL_OFFSET) = 0;
+			Bit_Banding(PORTF_BASE, i, GPIO_DEN_OFFSET) = 0;
+			Bit_Banding(PORTF_BASE, i, GPIO_PDR_OFFSET) = 0;
+			Bit_Banding(PORTF_BASE, i, GPIO_PUR_OFFSET) = 0;
+			Bit_Banding(PORTF_BASE, i, GPIO_PCTL_OFFSET) = 0x00;
+			Bit_Banding(PORTF_BASE, i, GPIO_CR_OFFSET) = 0;
 		}
 		
 		if(ConfigPtr[i].PortPinDirection == Out){
-			Bit_Banding(PORTF_BASE, 0, GPIO_DIR_OFFSET) = Out;
-			Bit_Banding(PORTF_BASE, 0, GPIO_R8R_OFFSET) = 1;
+			Bit_Banding(PORTF_BASE, i, GPIO_DIR_OFFSET) = Out;
+			Bit_Banding(PORTF_BASE, i, GPIO_R8R_OFFSET) = 1;
 		}		
 		
 	}
