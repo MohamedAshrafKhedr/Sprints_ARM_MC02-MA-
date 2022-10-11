@@ -71,25 +71,23 @@ void Sys_Tick_Notification(void){
 	
 
 	Cnt++;
-	LED_ON(5);
-	LED_OFF(2);
+	
+	if(Dio_ReadChannel(F1) == Hi){
+		LED_ON(F0);
+	}else if(Dio_ReadChannel(F2) == Hi){
+		LED_OFF(F0);
+	}
 	
 }
-void LED_ON(uint8 time){
-	if((time == Cnt)&&(0 == F)){
-		x = Dio_FlipChannel(F0);
-		Cnt = 0;
+void LED_ON(uint8 Bit){
+	//if((time == Cnt)&&(0 == F)){
+		Dio_WriteChannel(Bit, Hi);
 		//SysTick_Init(Count_Value);
-		F = 1;
 	}
-}
-void LED_OFF(uint8 time){
-	if((time == Cnt)&&(1 == F)){
-		x = Dio_FlipChannel(F0);
-		Cnt = 0;
+void LED_OFF(uint8 Bit){
+
 		//SysTick_Init(Count_Value);
-		F = 0;
-	}
+	Dio_WriteChannel(Bit, Lo);
 }
 /**********************************************************************************************************************
  *  END OF FILE: main.c

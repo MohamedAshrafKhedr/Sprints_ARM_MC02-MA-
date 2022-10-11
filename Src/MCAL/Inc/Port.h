@@ -32,14 +32,17 @@
 #define GPIO_CR_OFFSET																						(0x00000524UL)
 #define GPIO_R8R_OFFSET																						(0x00000508UL)
 #define GPIO_SLR_OFFSET																						(0x00000518UL)
-#define NO_OF_PORTS																							(1UL)
+#define GPIO_LOCK_OFFSET																					(0x00000520UL)
+#define NO_OF_PORTS																							(3UL)
 #define PIN_MODE																							 0
 #define PIN_LEVEL																							 Low
 #define PIN_DIR																								 Out
 #define PIN_INT_ATTACH																						 0
 #define PIN_CURRENT 																						 8
 #define PORT 																								 'F'
-#define F0																									 0	
+#define F0																									 0
+#define F1																									 1
+#define F2																									 2	
 /**********************************************************************************************************************
  *  GLOBAL FUNCTION MACROS
  *********************************************************************************************************************/
