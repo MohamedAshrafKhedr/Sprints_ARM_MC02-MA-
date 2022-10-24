@@ -234,8 +234,11 @@
 	
 	#define prvAddTaskToReadyList( pxTCB )                                                                 \
 			traceMOVED_TASK_TO_READY_STATE( pxTCB );                                                           \
-			taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority );                                                \
-			vListInsert( &(xReadyTasksListEDF), &( ( pxTCB )->xStateListItem ) ); \
+			taskRECORD_READY_PRIORITY( ( pxTCB )->uxPriority ); 			\
+			/*EDF Modification No. 1'*/                    \
+			/* keep updating the the deadline of the idle task to be always as far as possible*/	 \
+			listSET_LIST_ITEM_VALUE(&((pxCurrentTCB)->xStateListItem)  , (pxCurrentTCB)->xTaskPeriod + xTickCount ); /*configUSE_EDF_SCHEDULER*/					\
+			vListInsert( &(xReadyTasksListEDF), &( ( pxTCB )->xStateListItem ) );   \
 			tracePOST_MOVED_TASK_TO_READY_STATE( pxTCB );            
 
 #endif
@@ -867,9 +870,7 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
     {
         TCB_t * pxNewTCB;
         BaseType_t xReturn;
-			/*EDF Modification No. 6*/
-			// initalizing the Period parameter with the given value
-				pxNewTCB->xTaskPeriod = period ; //configUSE_EDF_SCHEDULER	
+			
 			
 
         /* If the stack grows down then allocate the stack then the TCB so the stack
@@ -940,7 +941,10 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB ) PRIVILEGED_FUNCTION;
 
             prvInitialiseNewTask( pxTaskCode, pcName, ( uint32_t ) usStackDepth, pvParameters, uxPriority, pxCreatedTask, pxNewTCB, NULL );
           
-								
+						/*EDF Modification No. 6*/
+						// initalizing the Period parameter with the given value
+						pxNewTCB->xTaskPeriod = period ; //configUSE_EDF_SCHEDULER
+						
 						/*EDF Modification No. 7*/	
 						// updating the new deadline
 						listSET_LIST_ITEM_VALUE(&((pxNewTCB)->xStateListItem),(pxNewTCB)->xTaskPeriod + xTaskGetTickCount() );//configUSE_EDF_SCHEDULER
@@ -1248,6 +1252,18 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
              * so far. */
             if( xSchedulerRunning == pdFALSE )
             {
+							#if(configUSE_EDF_SCHEDULER)
+							{
+								if( pxCurrentTCB->xTaskPeriod >= pxNewTCB->xTaskPeriod )
+									{
+										pxCurrentTCB = pxNewTCB;
+									}
+									else
+									{
+										mtCOVERAGE_TEST_MARKER();
+									}
+							}
+							#else
 							
 									if( pxCurrentTCB->uxPriority <= pxNewTCB->uxPriority )
 									{
@@ -1257,7 +1273,7 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 									{
 										mtCOVERAGE_TEST_MARKER();
 									}
-											
+							#endif	
             }
             else
             {
@@ -1285,19 +1301,10 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
     {
         /* If the created task is of a higher priority than the current task
          * then it should run now. */
-        if( pxCurrentTCB->uxPriority < pxNewTCB->uxPriority )
-        {
-            taskYIELD_IF_USING_PREEMPTION();
-        }
-        else
-        {
-            mtCOVERAGE_TEST_MARKER();
-        }
-				
-				/*Setting priority based on Earlist deadline during preemption*/
+			/*Setting priority based on Earlist deadline during preemption*/
 						#if ( configUSE_EDF_SCHEDULER == 1 )
 						{
-							if( ((pxCurrentTCB->xStateListItem).xItemValue) >= ((pxNewTCB->xStateListItem).xItemValue) )
+							if( pxNewTCB->xTaskPeriod < pxCurrentTCB->xTaskPeriod )
 								{
 									taskYIELD_IF_USING_PREEMPTION();
 								}	
@@ -1306,7 +1313,17 @@ static void prvAddNewTaskToReadyList( TCB_t * pxNewTCB )
 									mtCOVERAGE_TEST_MARKER();
 								}
 						}
-						#endif
+				#else
+        if( pxCurrentTCB->uxPriority < pxNewTCB->uxPriority )
+        {
+            taskYIELD_IF_USING_PREEMPTION();
+        }
+        else
+        {
+            mtCOVERAGE_TEST_MARKER();
+        }
+			#endif
+				
 								
 				
 				
@@ -3020,7 +3037,7 @@ BaseType_t xTaskIncrementTick( void )
 
 										#if (configUSE_EDF_SCHEDULER == 1)
 											{
-													listSET_LIST_ITEM_VALUE( &( ( pxTCB )->xStateListItem ), ( ((pxTCB)->xTaskPeriod)+ xTaskGetTickCount()) );									
+													listSET_LIST_ITEM_VALUE( &( ( pxTCB )->xStateListItem ), ( ((pxTCB)->xTaskPeriod)+ xTickCount) );									
 											}
 										#endif
 														
@@ -3745,13 +3762,7 @@ static portTASK_FUNCTION( prvIdleTask, pvParameters )
         #endif /* configUSE_IDLE_HOOK */
 						
 				
-				/*EDF Modification No. 1'*/
-				// keep updating the the deadline of the idle task to be always as far as possible
-
-				#if ( configUSE_EDF_SCHEDULER == 1)			
-							listSET_LIST_ITEM_VALUE(&((pxCurrentTCB)->xStateListItem)  , (pxCurrentTCB)->xTaskPeriod + xTaskGetTickCount() );//configUSE_EDF_SCHEDULER					
-				#endif
-
+				
         /* This conditional compilation should use inequality to 0, not equality
          * to 1.  This is to ensure portSUPPRESS_TICKS_AND_SLEEP() is called when
          * user defined low power mode  implementations require
