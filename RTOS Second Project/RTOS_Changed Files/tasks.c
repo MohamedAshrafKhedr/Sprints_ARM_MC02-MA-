@@ -2754,12 +2754,20 @@ char * pcTaskGetName( TaskHandle_t xTaskToQuery ) /*lint !e971 Unqualified char 
             {
                 /* Fill in an TaskStatus_t structure with information on each
                  * task in the Ready state. */
+							#if(configUSE_EDF_SCHEDULER == 1)
+							{
+								
+							    uxTask += prvListTasksWithinSingleList( &( pxTaskStatusArray[ uxTask ] ), &xReadyTasksListEDF, eReady );
+							}
+								#else
+							{
                 do
                 {
                     uxQueue--;
                     uxTask += prvListTasksWithinSingleList( &( pxTaskStatusArray[ uxTask ] ), &( pxReadyTasksLists[ uxQueue ] ), eReady );
                 } while( uxQueue > ( UBaseType_t ) tskIDLE_PRIORITY );
-
+							}
+							#endif
                 /* Fill in an TaskStatus_t structure with information on each
                  * task in the Blocked state. */
                 uxTask += prvListTasksWithinSingleList( &( pxTaskStatusArray[ uxTask ] ), ( List_t * ) pxDelayedTaskList, eBlocked );

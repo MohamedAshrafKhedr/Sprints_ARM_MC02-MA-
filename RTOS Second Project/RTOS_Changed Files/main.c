@@ -1,6 +1,6 @@
 /*
- * FreeRTOS V202112.00
- * Copyright (C) 2020 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
+ * FreeRTOS Kernel V10.2.0
+ * Copyright (C) 2019 Amazon.com, Inc. or its affiliates.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of
  * this software and associated documentation files (the "Software"), to deal in
@@ -54,64 +54,27 @@
 
 /* Standard includes. */
 #include <stdlib.h>
+#include <stdio.h>
 
 /* Scheduler includes. */
 #include "FreeRTOS.h"
 #include "task.h"
+#include "queue.h"
+#include "lpc21xx.h"
 
-/* Demo application includes. */
-#include "partest.h"
-#include "flash.h"
-#include "comtest2.h"
+/* Peripheral includes. */
 #include "serial.h"
-#include "PollQ.h"
-#include "BlockQ.h"
-#include "semtest.h"
-#include "dynamic.h"
+#include "GPIO.h"
+
 
 /*-----------------------------------------------------------*/
 
 /* Constants to setup I/O and processor. */
-#define mainTX_ENABLE		( ( unsigned long ) 0x00010000 )	/* UART1. */
-#define mainRX_ENABLE		( ( unsigned long ) 0x00040000 ) 	/* UART1. */
 #define mainBUS_CLK_FULL	( ( unsigned char ) 0x01 )
-#define mainLED_TO_OUTPUT	( ( unsigned long ) 0xff0000 )
 
 /* Constants for the ComTest demo application tasks. */
 #define mainCOM_TEST_BAUD_RATE	( ( unsigned long ) 115200 )
-#define mainCOM_TEST_LED		( 3 )
 
-/* Priorities for the demo application tasks. */
-#define mainLED_TASK_PRIORITY		( tskIDLE_PRIORITY + 2 )
-#define mainCOM_TEST_PRIORITY		( tskIDLE_PRIORITY + 2 )
-#define mainQUEUE_POLL_PRIORITY		( tskIDLE_PRIORITY + 2 )
-#define mainBLOCK_Q_PRIORITY		( tskIDLE_PRIORITY + 2 )
-#define mainSEM_TEST_PRIORITY		( tskIDLE_PRIORITY + 1 )
-#define mainCHECK_TASK_PRIORITY		( tskIDLE_PRIORITY + 3 )
-
-/* Constants used by the "check" task.  As described at the head of this file
-the check task toggles an LED.  The rate at which the LED flashes is used to
-indicate whether an error has been detected or not.  If the LED toggles every
-3 seconds then no errors have been detected.  If the rate increases to 500ms
-then an error has been detected in at least one of the demo application tasks. */
-#define mainCHECK_LED				( 7 )
-#define mainNO_ERROR_FLASH_PERIOD	( ( TickType_t ) 3000 / portTICK_PERIOD_MS  )
-#define mainERROR_FLASH_PERIOD		( ( TickType_t ) 500 / portTICK_PERIOD_MS  )
-
-/*-----------------------------------------------------------*/
-
-/*
- * Checks that all the demo application tasks are still executing without error
- * - as described at the top of the file.
- */
-static long prvCheckOtherTasksAreStillRunning( void );
-
-/*
- * The task that executes at the highest priority and calls 
- * prvCheckOtherTasksAreStillRunning().  See the description at the top
- * of the file.
- */
-static void vErrorChecks( void *pvParameters );
 
 /*
  * Configure the processor for use with the Keil demo board.  This is very
@@ -119,32 +82,300 @@ static void vErrorChecks( void *pvParameters );
  * file.
  */
 static void prvSetupHardware( void );
-
 /*-----------------------------------------------------------*/
 
+TaskHandle_t Task_Button_1 = NULL;
+TaskHandle_t Task_Button_2 = NULL;
+TaskHandle_t Task_Periodic_Trans = NULL;
+TaskHandle_t Task_Uart_Rec = NULL;
+TaskHandle_t Task_Load_1 = NULL;
+TaskHandle_t Task_Load_2 = NULL;
+
+char * runTimeStateBuff = "Periodic_String\n";
+const char * runTimeStateBuff_1 = "Button_1_Rising_edge\n";
+const char * runTimeStateBuff_2 = "Button_1_Falling_edge\n";
+const char * runTimeStateBuff_3 = "Button_2_Rising_edge\n";
+const char * runTimeStateBuff_4 = "Button_2_Falling_edge\n";
+char * runTimeStateBuff_5 = "Periodic_String\n";
+unsigned int strlen(const char *x){
+
+	unsigned int l = 0; 
+	while(*x != '\0'){
+	l++;
+	x++;
+	}
+	return l;
+}	
+#define Period_A  50
+#define Period_B  50
+#define Period_C  100
+#define Period_D  20
+#define Period_E  10
+#define Period_F  100
 
 
 /*
  * Application entry point:
  * Starts all the other tasks, then starts the scheduler. 
  */
+
+ QueueHandle_t xQueue1; 
+
+
+/*
+-------------------------------------------------
+ Hooks Implementation
+-------------------------------------------------
+
+*/
+
+void vApplicationTickHook(void){
+
+	/*Implementation*/
+	
+	GPIO_write(PORT_0, PIN0, PIN_IS_HIGH);
+	
+	GPIO_write(PORT_0, PIN0, PIN_IS_LOW);
+	
+}
+
+/*
+-------------------------------------------------
+ Task Prototype
+-------------------------------------------------
+*/
+
+void Button_1_Monitor(void *PvParameter){
+	
+	char F = 0;
+	TickType_t Last_W_T = xTaskGetTickCount();
+	
+	for(;;){
+	
+		
+		if((GPIO_read(PORT_0,PIN1))&&(F == 0)){
+			
+			 F = 1;
+			 if( xQueue1 != 0 )
+    {
+        /* Send an unsigned long.  Wait for 10 ticks for space to become
+        available if necessary. */
+        if( xQueueSend( xQueue1,
+                             ( void * ) &runTimeStateBuff_1,
+                             ( TickType_t ) 10 ) != pdPASS )
+        {
+            /* Failed to post the message, even after 10 ticks. */
+        }
+    }
+		
+		}else if((!(GPIO_read(PORT_0,PIN1))) && (F == 1)){
+			
+			F = 0;
+				 if( xQueue1 != 0 )
+    {
+        /* Send an unsigned long.  Wait for 10 ticks for space to become
+        available if necessary. */
+        if( xQueueSend( xQueue1,
+                             ( void * ) &runTimeStateBuff_2,
+                             ( TickType_t ) 10 ) != pdPASS )
+        {
+            /* Failed to post the message, even after 10 ticks. */
+        }
+			
+		}
+	}
+		
+		xTaskDelayUntil(& Last_W_T, Period_A);
+		
+	
+	}
+	
+	
+	
+}
+void Button_2_Monitor(void *PvParameter){
+	
+	char F2 = 0;
+		
+	TickType_t Last_W_T_1 = xTaskGetTickCount();
+	
+	for(;;){
+	
+		
+		if((GPIO_read(PORT_0,PIN2))&&(F2 == 0)){
+			F2 = 1;
+	 if( xQueue1 != 0 )
+    {
+        /* Send an unsigned long.  Wait for 10 ticks for space to become
+        available if necessary. */
+        if( xQueueSend( xQueue1,
+                             ( void * ) &runTimeStateBuff_3,
+                             ( TickType_t ) 10 ) != pdPASS )
+        {
+            /* Failed to post the message, even after 10 ticks. */
+        }
+		}
+		}else if(!(GPIO_read(PORT_0,PIN2))&&(F2 == 0)){
+			F2 = 0;
+			
+			if( xQueue1 != 0 )
+    {
+        /* Send an unsigned long.  Wait for 10 ticks for space to become
+        available if necessary. */
+        if( xQueueSend( xQueue1,
+                             ( void * ) &runTimeStateBuff_4,
+                             ( TickType_t ) 10 ) != pdPASS )
+        {
+            /* Failed to post the message, even after 10 ticks. */
+        }
+		}
+	}
+		
+		
+		xTaskDelayUntil( &Last_W_T_1, Period_B);
+			
+	
+}
+
+}
+
+	
+void Periodic_Transmitter(void *PvParameter){
+	
+	
+	TickType_t Last_W_T_2 = xTaskGetTickCount();
+	for(;;){
+		
+		
+			 if( xQueue1 != 0 )
+    {
+        /* Send an unsigned long.  Wait for 10 ticks for space to become
+        available if necessary. */
+        if( xQueueSend( xQueue1,
+                             ( void * ) &runTimeStateBuff_5,
+                             ( TickType_t ) 10 ) != pdPASS )
+        {
+            /* Failed to post the message, even after 10 ticks. */
+        }
+		while(txDataSizeLeftToSend != 0);
+	
+		xTaskDelayUntil(&Last_W_T_2, Period_C);
+		
+
+	}
+	
+}
+	}
+void Uart_Receiver(void *PvParameter){
+
+	
+	TickType_t Last_W_T_3 = xTaskGetTickCount();
+	for(;;){
+		
+		if(xQueueReceive(xQueue1, (void *) &runTimeStateBuff, ( TickType_t ) 10 ) != pdPASS ){
+
+		vSerialPutString(runTimeStateBuff, strlen(runTimeStateBuff));
+		
+		while(txDataSizeLeftToSend != 0);
+		}
+		xTaskDelayUntil(& Last_W_T_3, Period_D);
+		
+
+	}
+	
+}
+void Load_1_(void *PvParameter){
+
+	int i;
+	
+	TickType_t Last_W_T_5 = xTaskGetTickCount();
+	
+	for(;;){
+	
+		for(i = 0; i < 10000 ;i++){
+			
+			i = i;
+		}
+			
+
+		xTaskDelayUntil(&Last_W_T_5, Period_E);
+
+	}
+	
+}
+void Load_2_(void *PvParameter){
+
+	int i;
+	
+	TickType_t Last_W_T_6 = xTaskGetTickCount();
+	for(;;){
+	
+			for(i = 0; i < 25000;i++){
+				i = i;
+			}
+			
+			xTaskDelayUntil(&Last_W_T_6, Period_F);
+			
+			
+	
+			
+	}
+	
+}
+
 int main( void )
 {
 	/* Setup the hardware for use with the Keil demo board. */
 	prvSetupHardware();
 
-	/* Start the demo/test application tasks. */
-	vAltStartComTestTasks( mainCOM_TEST_PRIORITY, mainCOM_TEST_BAUD_RATE, mainCOM_TEST_LED );
-	vStartLEDFlashTasks( mainLED_TASK_PRIORITY );
-	vStartPolledQueueTasks( mainQUEUE_POLL_PRIORITY );
-	vStartBlockingQueueTasks( mainBLOCK_Q_PRIORITY );
-	vStartSemaphoreTasks( mainSEM_TEST_PRIORITY );
-	vStartDynamicPriorityTasks();
+	
+    /* Create Tasks here */
+	xTaskPeriodicCreate( Button_1_Monitor, 
+											"Button_1_Monitor", 
+											configMINIMAL_STACK_SIZE, 
+											(void * ) NULL, 
+											(tskIDLE_PRIORITY | portPRIVILEGE_BIT ),
+											&Task_Button_1,
+											Period_A);
+		xTaskPeriodicCreate( Button_2_Monitor, 
+											"Button_2_Monitor", 
+											configMINIMAL_STACK_SIZE, 
+											(void * ) NULL, 
+											(tskIDLE_PRIORITY | portPRIVILEGE_BIT ),
+											&Task_Button_2,
+											Period_A);
+		xTaskPeriodicCreate( Periodic_Transmitter, 
+											"Periodic_Trans", 
+											configMINIMAL_STACK_SIZE, 
+											(void * ) NULL, 
+											(tskIDLE_PRIORITY | portPRIVILEGE_BIT ),
+											&Task_Periodic_Trans,
+											Period_C);
+		xTaskPeriodicCreate( Uart_Receiver, 
+											"Uart_Rec", 
+											configMINIMAL_STACK_SIZE, 
+											(void * ) NULL, 
+											(tskIDLE_PRIORITY | portPRIVILEGE_BIT ),
+											&Task_Uart_Rec,
+											Period_D);
 
-	/* Start the check task - which is defined in this file.  This is the task
-	that periodically checks to see that all the other tasks are executing 
-	without error. */
-	xTaskCreate( vErrorChecks, "Check", configMINIMAL_STACK_SIZE, NULL, mainCHECK_TASK_PRIORITY, NULL );
+	xTaskPeriodicCreate( Load_1_, 
+											"Load_1_", 
+											configMINIMAL_STACK_SIZE, 
+											(void * ) NULL, 
+											(tskIDLE_PRIORITY | portPRIVILEGE_BIT ),
+											&Task_Load_1,
+											Period_E);
+											
+	xTaskPeriodicCreate( Load_2_, 
+											"Load_2_", 
+											configMINIMAL_STACK_SIZE, 
+											(void * ) NULL, 
+											(tskIDLE_PRIORITY | portPRIVILEGE_BIT ),
+											&Task_Load_2,
+											Period_F);
+	
+	xQueue1 = xQueueCreate( 10, sizeof( char * ) );
 
 	/* Now all the tasks have been started - start the scheduler.
 
@@ -153,97 +384,54 @@ int main( void )
 	called.  The demo applications included in the FreeRTOS.org download switch
 	to supervisor mode prior to main being called.  If you are not using one of
 	these demo application projects then ensure Supervisor mode is used here. */
+	vTaskSetTaskNumber(Task_Button_1, 1);
+	vTaskSetTaskNumber(Task_Button_2, 2);
+	vTaskSetTaskNumber(Task_Periodic_Trans, 3);
+	vTaskSetTaskNumber(Task_Uart_Rec, 4);
+	vTaskSetTaskNumber(Task_Load_1, 5);
+	vTaskSetTaskNumber(Task_Load_2, 6);										
+	
+	
+											
 	vTaskStartScheduler();
 
 	/* Should never reach here!  If you do then there was not enough heap
 	available for the idle task to be created. */
 	for( ;; );
+	return 0;
 }
 /*-----------------------------------------------------------*/
 
-static void vErrorChecks( void *pvParameters )
+/* Function to reset timer 1 */
+void timer1Reset(void)
 {
-TickType_t xDelayPeriod = mainNO_ERROR_FLASH_PERIOD;
-
-	/* Parameters are not used. */
-	( void ) pvParameters;
-
-	/* Cycle for ever, delaying then checking all the other tasks are still
-	operating without error.  If an error is detected then the delay period
-	is decreased from mainNO_ERROR_FLASH_PERIOD to mainERROR_FLASH_PERIOD so
-	the on board LED flash rate will increase.
-
-	This task runs at the highest priority. */
-
-	for( ;; )
-	{
-		/* The period of the delay depends on whether an error has been 
-		detected or not.  If an error has been detected then the period
-		is reduced to increase the LED flash rate. */
-		vTaskDelay( xDelayPeriod );
-
-		if( prvCheckOtherTasksAreStillRunning() != pdPASS )
-		{
-			/* An error has been detected in one of the tasks - flash faster. */
-			xDelayPeriod = mainERROR_FLASH_PERIOD;
-		}
-
-		/* Toggle the LED before going back to wait for the next cycle. */
-		vParTestToggleLED( mainCHECK_LED );
-	}
+	T1TCR |= 0x2;
+	T1TCR &= ~0x2;
 }
-/*-----------------------------------------------------------*/
+
+/* Function to initialize and start timer 1 */
+static void configTimer1(void)
+{
+	T1PR = 1000;
+	T1TCR |= 0x1;
+}
 
 static void prvSetupHardware( void )
 {
 	/* Perform the hardware setup required.  This is minimal as most of the
 	setup is managed by the settings in the project file. */
 
-	/* Configure the UART1 pins.  All other pins remain at their default of 0. */
-	PINSEL0 |= mainTX_ENABLE;
-	PINSEL0 |= mainRX_ENABLE;
+	/* Configure UART */
+	xSerialPortInitMinimal(mainCOM_TEST_BAUD_RATE);
 
-	/* LED pins need to be output. */
-	IODIR1 = mainLED_TO_OUTPUT;
+	/* Configure GPIO */
+	GPIO_init();
+	
+	/* Config trace timer 1 and read T1TC to get current tick */
+	configTimer1();
 
 	/* Setup the peripheral bus to be the same as the PLL output. */
 	VPBDIV = mainBUS_CLK_FULL;
-}
-/*-----------------------------------------------------------*/
-
-static long prvCheckOtherTasksAreStillRunning( void )
-{
-long lReturn = pdPASS;
-
-	/* Check all the demo tasks (other than the flash tasks) to ensure
-	that they are all still running, and that none of them have detected
-	an error. */
-	if( xAreComTestTasksStillRunning() != pdPASS )
-	{
-		lReturn = pdFAIL;
-	}
-
-	if( xArePollingQueuesStillRunning() != pdTRUE )
-	{
-		lReturn = pdFAIL;
-	}
-
-	if( xAreBlockingQueuesStillRunning() != pdTRUE )
-	{
-		lReturn = pdFAIL;
-	}
-
-	if( xAreSemaphoreTasksStillRunning() != pdTRUE )
-	{
-		lReturn = pdFAIL;
-	}
-
-	if( xAreDynamicPriorityTasksStillRunning() != pdTRUE )
-	{
-		lReturn = pdFAIL;
-	}
-
-	return lReturn;
 }
 /*-----------------------------------------------------------*/
 
